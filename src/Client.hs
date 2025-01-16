@@ -3,19 +3,25 @@ module Client
     ) where
 
 import Lib
+import Functions 
 import Control.Concurrent (MVar, takeMVar, putMVar, threadDelay)
 import System.Random
-import Data.Time.Clock (getCurrentTime)
+import Data.Time.Clock (UTCTime, getCurrentTime)
 
-initClient :: String -> MVar Coin -> MVar Coin -> Int -> IO ()
-initClient name forClient forServer limit = 
+initClient :: Int -> MVar (ServerQueue Int UTCTime) -> Int -> IO ()
+initClient id forServer limit = 
     if limit == 0 
         then return ()
         else do
-            c1 <- takeMVar forClient
-            putStrLn $ name ++ "Client is doing abc"
+            -- print "called1"
+            c1 <- takeMVar forServer
+            time <- getCurrentTime 
+            let temp = enqueue (limit + (id * 10)) time c1
+            putStrLn $ (show id) ++ "Client is doing abc"
             putStrLn $ (show limit)
-            threadDelay 5000000
-            putMVar forServer (c1)
+            -- threadDelay 5000
+            putStrLn $ "Client ping at " ++ (show time)
+            putMVar forServer (temp)
             -- threadDelay 5000000
-            initClient name forClient forServer (limit - 1)
+            print "done1"
+            initClient id forServer (limit - 1)

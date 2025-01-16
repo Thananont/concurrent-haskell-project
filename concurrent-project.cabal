@@ -26,8 +26,10 @@ source-repository head
 library
   exposed-modules:
       Client
+      Functions
       Lib
       Server
+      Types
   other-modules:
       Paths_concurrent_project
   autogen-modules:

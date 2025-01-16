@@ -4,24 +4,33 @@ module Client
 
 import Lib
 import Functions 
-import Control.Concurrent (MVar, takeMVar, putMVar, threadDelay)
+import Control.Concurrent (MVar, newEmptyMVar, takeMVar, putMVar, threadDelay)
 import System.Random
 import Data.Time.Clock (UTCTime, getCurrentTime)
 
-initClient :: Int -> MVar (ServerQueue Int UTCTime) -> Int -> IO ()
+initClient :: Int -> MVar (RequestQueue String (MVar String) String) -> Int -> IO ()
 initClient id forServer limit = 
     if limit == 0 
         then return ()
         else do
-            -- print "called1"
             c1 <- takeMVar forServer
+            print (show id ++ "called1")
+            responseSignal <- newEmptyMVar
+            print "1"
             time <- getCurrentTime 
-            let temp = enqueue (limit + (id * 10)) time c1
-            putStrLn $ (show id) ++ "Client is doing abc"
-            putStrLn $ (show limit)
+            print "2"
+            let temp = enqueue (show (limit + (id * 10))) responseSignal (show time) c1
+            print "3"
+            -- putStrLn $ (show id) ++ "Client is doing abc"
+            -- putStrLn $ (show limit)
             -- threadDelay 5000
-            putStrLn $ "Client ping at " ++ (show time)
+            -- putStrLn $ "Client ping at " ++ (show time)
             putMVar forServer (temp)
+            print "4"
+            response <- takeMVar responseSignal
+            print (show id ++ "response received")
+            -- print response
             -- threadDelay 5000000
-            print "done1"
+            -- print "done1"
+            threadDelay 500000
             initClient id forServer (limit - 1)

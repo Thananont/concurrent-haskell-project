@@ -4,12 +4,14 @@ module Functions
     dequeue
     ) where
 
-data RequestQueue a b c = EmptyQueue | Queue a b c (RequestQueue a b c) deriving (Show, Eq)
+import Types (Request, Response)
 
-enqueue :: a -> b -> c -> RequestQueue a b c -> RequestQueue a b c
-enqueue x y z EmptyQueue = Queue x y z EmptyQueue
-enqueue x y z (Queue q w e r) = Queue x y z (enqueue q w e r)
+data RequestQueue a = EmptyQueue | Queue a (RequestQueue a) deriving (Show, Eq)
 
-dequeue :: RequestQueue a b c -> (Maybe (a, b, c), RequestQueue a b c)
+enqueue :: a -> RequestQueue a -> RequestQueue a
+enqueue a EmptyQueue = Queue a EmptyQueue
+enqueue a (Queue b c) = Queue a (enqueue b c)
+
+dequeue :: RequestQueue a -> (Maybe a, RequestQueue a)
 dequeue EmptyQueue = (Nothing, EmptyQueue) -- Nothing to dequeue if empty
-dequeue (Queue x y z q) = (Just (x, y, z), q)     
+dequeue (Queue a b) = (Just a, b)     

@@ -3,16 +3,17 @@ module Server
     ) where
 
 import Lib
-import Functions (RequestQueue(..), enqueue, dequeue)
+import Functions (RequestQueue, enqueue, dequeue)
+import Types (Request(..), Response(..))
 import Control.Concurrent (MVar, takeMVar, newMVar, putMVar, threadDelay)
 import System.Random
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Data.IORef (IORef, readIORef, writeIORef)
 
-initServer :: String -> MVar (RequestQueue String (MVar String) String) -> IORef Int -> MVar Int -> IO ()
+initServer :: Int -> MVar (RequestQueue Request) -> IORef Int -> MVar Int -> IO ()
 initServer name forServer processedCounter end = do 
     c1 <- takeMVar forServer
-    print (name ++ "called")
+    print (show name ++ "called")
     -- print "1"
     -- putStrLn $ (show c1)
     let (request, queue) = dequeue c1
@@ -38,7 +39,7 @@ initServer name forServer processedCounter end = do
     currentCount <- readIORef processedCounter
     let newCount = if id == "-1" then currentCount else currentCount + 1
     writeIORef processedCounter newCount
-    putStrLn (show newCount ++ name)
+    putStrLn (show newCount ++ show name)
     -- if newCount >= 100
     --     then putMVar end 1
     --     else print "Whoops"
@@ -53,6 +54,6 @@ initServer name forServer processedCounter end = do
     print "done"
     initServer name forServer processedCounter end
 
-parseRequest :: Maybe (String, MVar String, String) -> MVar String -> (String, MVar String, String)
-parseRequest (Just (a, b, c)) _ = (a, b, c)
+parseRequest :: Maybe Request -> MVar String -> (String, MVar String, String)
+parseRequest (Just request) _ = (requestDetail request, responseSignal request, requestTime request)
 parseRequest Nothing defaultMVar = ("-1", defaultMVar ,"no data")

@@ -4,11 +4,12 @@ module Client
 
 import Lib
 import Functions 
+import Types (Request(..), Response)
 import Control.Concurrent (MVar, newEmptyMVar, takeMVar, putMVar, threadDelay)
 import System.Random
 import Data.Time.Clock (UTCTime, getCurrentTime)
 
-initClient :: Int -> MVar (RequestQueue String (MVar String) String) -> Int -> IO ()
+initClient :: Int -> MVar (RequestQueue Request) -> Int -> IO ()
 initClient id forServer limit = 
     if limit == 0 
         then return ()
@@ -19,7 +20,13 @@ initClient id forServer limit =
             print "1"
             time <- getCurrentTime 
             print "2"
-            let temp = enqueue (show (limit + (id * 10))) responseSignal (show time) c1
+            -- let request = ((show (limit + (id * 10))), responseSignal, (show time)) :: Request
+            let request = Request {
+                requestDetail = "sample",
+                responseSignal = responseSignal,
+                requestTime = (show time)
+            }
+            let temp = enqueue request c1
             print "3"
             -- putStrLn $ (show id) ++ "Client is doing abc"
             -- putStrLn $ (show limit)

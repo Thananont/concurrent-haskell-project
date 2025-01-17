@@ -10,7 +10,7 @@ import Data.IORef (IORef, readIORef, writeIORef)
 import System.Log.FastLogger 
 
 initServer :: Int -> MVar (RequestQueue Request) -> IORef Int -> MVar String -> LoggerSet-> IO ()
-initServer name forServer processedCounter end logger = do 
+initServer serverId forServer processedCounter end logger = do 
     queueLog <- takeMVar forServer
     let (request, queue) = dequeue queueLog
 
@@ -27,7 +27,7 @@ initServer name forServer processedCounter end logger = do
         responseTime = currentTime
     }
     
-    logRequest logger currentTime reqDetail
+    logRequest logger serverId currentTime reqDetail
 
     putMVar reqSignal response
 
@@ -41,17 +41,17 @@ initServer name forServer processedCounter end logger = do
         else return ()
     
     threadDelay 500000
-    initServer name forServer processedCounter end logger
+    initServer serverId forServer processedCounter end logger
 
 parseRequest :: Maybe Request -> MVar Response -> UTCTime -> (String, MVar Response, UTCTime)
 parseRequest (Just request) _ _ = (requestDetail request, responseSignal request, requestTime request)
 parseRequest Nothing defaultMVar defaultTime = ("no request", defaultMVar, defaultTime)
 
-logRequest :: LoggerSet -> UTCTime -> String -> IO ()
-logRequest logger date message = do
+logRequest :: LoggerSet -> Int -> UTCTime -> String -> IO ()
+logRequest logger serverId date message = do
     if message == "no request"
         then return ()
         else do
-            let logMessage = "[" ++ show date ++ "] : " ++ message
+            let logMessage = "[" ++ show date ++ "]ServerId" ++ (show serverId) ++ ": " ++ message
             print logMessage
             pushLogStrLn logger (toLogStr logMessage)

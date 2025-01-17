@@ -20,11 +20,9 @@ main = do
     forServer <- newMVar q1
     end <- newEmptyMVar
     
-    forM_ [0..9] $ \i -> 
-        forkIO (initClient i forServer 10)
+    forM_ [0..9] $ \i -> forkIO (initClient i forServer 10)
     
-    forM_ [1..3] $ \i -> 
-        forkIO (initServer i forServer processedCounter end logger)
+    forM_ [1..3] $ \i -> forkIO (initServer i forServer processedCounter end logger)
     
     endSignal <- takeMVar end
     print endSignal

@@ -6,7 +6,7 @@ import Queue (RequestQueue, enqueue)
 import Types (Request(..), Response(..))
 import Control.Concurrent (MVar, newEmptyMVar, takeMVar, putMVar, threadDelay)
 import System.Random (randomRIO)
-import Data.Time.Clock (UTCTime, getCurrentTime)
+import Data.Time.Clock (getCurrentTime)
 
 initClient :: Int -> MVar (RequestQueue Request) -> Int -> IO ()
 initClient clientId forServer limit = 
@@ -16,9 +16,10 @@ initClient clientId forServer limit =
             queueLog <- takeMVar forServer
             resSignal <- newEmptyMVar
 
+            let clientIdString = show clientId
             time <- getCurrentTime 
             
-            let clientRequestDetail = "ClientId " ++ (show clientId) ++ " pings the server at " ++ (show time)
+            let clientRequestDetail = "ClientId " ++ clientIdString ++ " pings the server at " ++ (show time)
             let request = Request {
                 requestDetail = clientRequestDetail,
                 responseSignal = resSignal,
@@ -26,15 +27,15 @@ initClient clientId forServer limit =
             }
             let requestQueue = enqueue request queueLog
             
-            print ("ClientId " ++ (show clientId) ++ ": Pings the server")
+            print ("ClientId " ++ clientIdString ++ ": Pings the server")
             putMVar forServer (requestQueue)
             
             response <- takeMVar resSignal
-            let (resData, resTime) = parseResponse response
-            print ("ClientId " ++ (show clientId) ++ ": " ++ resData) 
+            let resData = parseResponse response
+            print ("ClientId " ++ clientIdString ++ ": " ++ resData) 
             waitTime <- randomRIO (1000000 :: Int, 10000000 :: Int)
             threadDelay waitTime
             initClient clientId forServer (limit - 1)
 
-parseResponse :: Response -> (String, UTCTime)
-parseResponse response = (responseData response, responseTime response)        
+parseResponse :: Response -> String
+parseResponse response = responseData response        

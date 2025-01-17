@@ -2,11 +2,10 @@ module Client
     ( initClient
     ) where
 
-import Lib
-import Functions 
-import Types (Request(..), Response)
+import Queue (RequestQueue, enqueue)
+import Types (Request(..), Response(..))
 import Control.Concurrent (MVar, newEmptyMVar, takeMVar, putMVar, threadDelay)
-import System.Random
+import System.Random (randomRIO)
 import Data.Time.Clock (UTCTime, getCurrentTime)
 
 initClient :: Int -> MVar (RequestQueue Request) -> Int -> IO ()
@@ -14,30 +13,22 @@ initClient id forServer limit =
     if limit == 0 
         then return ()
         else do
-            c1 <- takeMVar forServer
-            print (show id ++ "called1")
+            queueLog <- takeMVar forServer
             responseSignal <- newEmptyMVar
-            print "1"
             time <- getCurrentTime 
-            print "2"
-            -- let request = ((show (limit + (id * 10))), responseSignal, (show time)) :: Request
+            let clientRequestDetail = "ClientId " ++ (show id) ++ " pings the server at " ++ (show time)
             let request = Request {
-                requestDetail = "sample",
+                requestDetail = clientRequestDetail,
                 responseSignal = responseSignal,
-                requestTime = (show time)
+                requestTime = time
             }
-            let temp = enqueue request c1
-            print "3"
-            -- putStrLn $ (show id) ++ "Client is doing abc"
-            -- putStrLn $ (show limit)
-            -- threadDelay 5000
-            -- putStrLn $ "Client ping at " ++ (show time)
+            let temp = enqueue request queueLog
             putMVar forServer (temp)
-            print "4"
             response <- takeMVar responseSignal
-            print (show id ++ "response received")
-            -- print response
-            -- threadDelay 5000000
-            -- print "done1"
-            threadDelay 500000
+            let (responseData, responseTime) = parseResponse response
+            waitTime <- randomRIO (1000000 :: Int, 10000000 :: Int)
+            threadDelay waitTime
             initClient id forServer (limit - 1)
+
+parseResponse :: Response -> (String, UTCTime)
+parseResponse response = (responseData response, responseTime response)        

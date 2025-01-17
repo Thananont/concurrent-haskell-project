@@ -4,14 +4,15 @@ module Types
     ) where
 
 import Control.Concurrent (MVar)
+import Data.Time.Clock (UTCTime)
 
 data Request = Request {
     requestDetail :: String,
-    responseSignal :: MVar String,
-    requestTime :: String
+    responseSignal :: MVar Response,
+    requestTime :: UTCTime
 }
 
 data Response = Response { 
     responseData :: String,
-    responseTime :: String
+    responseTime :: UTCTime
 }

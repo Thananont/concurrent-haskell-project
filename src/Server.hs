@@ -6,7 +6,7 @@ import Queue (RequestQueue, dequeue)
 import Types (Request(..), Response(..))
 import Control.Concurrent (MVar, takeMVar, newEmptyMVar, putMVar, threadDelay)
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime)
-import Data.IORef (IORef, readIORef, writeIORef)
+import Data.IORef (IORef, readIORef, writeIORef, atomicModifyIORef)
 import System.Log.FastLogger 
 
 initServer :: Int -> MVar (RequestQueue Request) -> IORef Int -> MVar String -> LoggerSet-> IO ()
@@ -31,11 +31,11 @@ initServer serverId forServer processedCounter end logger = do
 
     putMVar reqSignal response
 
-    currentCount <- readIORef processedCounter
-    let newCount = if reqDetail == "no request" then currentCount else currentCount + 1
-    writeIORef processedCounter newCount
+    requestCount <- atomicModifyIORef processedCounter $ \currentCount ->
+        let newCount = if reqDetail == "no request" then currentCount else currentCount + 1
+        in (newCount, newCount)
 
-    if newCount >= 100
+    if requestCount >= 100
         then do
             putMVar end "Server terminated"
         else return ()

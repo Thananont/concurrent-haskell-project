@@ -12,7 +12,7 @@ import System.Log.FastLogger (newFileLoggerSet, defaultBufSize)
 
 main :: IO ()
 main = do 
-    logger <- newFileLoggerSet defaultBufSize "request.log"
+    logger <- newFileLoggerSet defaultBufSize "requests.log"
 
     processedCounter <- newIORef 0
     

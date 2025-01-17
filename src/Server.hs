@@ -2,10 +2,9 @@ module Server
     ( initServer
     ) where
 
-import Queue (RequestQueue, enqueue, dequeue)
+import Queue (RequestQueue, dequeue)
 import Types (Request(..), Response(..))
-import Control.Concurrent (MVar, takeMVar, newMVar, newEmptyMVar, putMVar, threadDelay)
-import System.Random
+import Control.Concurrent (MVar, takeMVar, newEmptyMVar, putMVar, threadDelay)
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime)
 import Data.IORef (IORef, readIORef, writeIORef)
 import System.Log.FastLogger 
@@ -18,8 +17,8 @@ initServer name forServer processedCounter end logger = do
     placeHolderForDefault <- newEmptyMVar
     
     currentTime <- getCurrentTime
-    let (requestDetail, responseSignal, requestTime) = parseRequest request placeHolderForDefault currentTime
-    let diff = diffUTCTime currentTime requestTime
+    let (reqDetail, reqSignal, reqTime) = parseRequest request placeHolderForDefault currentTime
+    let diff = diffUTCTime currentTime reqTime
     
     putMVar forServer queue 
     
@@ -28,12 +27,12 @@ initServer name forServer processedCounter end logger = do
         responseTime = currentTime
     }
     
-    logRequest logger currentTime requestDetail
+    logRequest logger currentTime reqDetail
 
-    putMVar responseSignal response
+    putMVar reqSignal response
 
     currentCount <- readIORef processedCounter
-    let newCount = if requestDetail == "no request" then currentCount else currentCount + 1
+    let newCount = if reqDetail == "no request" then currentCount else currentCount + 1
     writeIORef processedCounter newCount
 
     if newCount >= 100
@@ -42,7 +41,7 @@ initServer name forServer processedCounter end logger = do
         else return ()
     
     threadDelay 500000
-    initServer name forServer processedCounter end logFile
+    initServer name forServer processedCounter end logger
 
 parseRequest :: Maybe Request -> MVar Response -> UTCTime -> (String, MVar Response, UTCTime)
 parseRequest (Just request) _ _ = (requestDetail request, responseSignal request, requestTime request)
@@ -53,5 +52,6 @@ logRequest logger date message = do
     if message == "no request"
         then return ()
         else do
-            let logMessage = "[" ++ show date ++ "] : " ++ message ++ "\n"
+            let logMessage = "[" ++ show date ++ "] : " ++ message
+            print logMessage
             pushLogStrLn logger (toLogStr logMessage)

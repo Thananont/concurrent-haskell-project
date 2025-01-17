@@ -13,14 +13,19 @@ import System.Log.FastLogger (newFileLoggerSet, defaultBufSize)
 main :: IO ()
 main = do 
     logger <- newFileLoggerSet defaultBufSize "request.log"
+
     processedCounter <- newIORef 0
+    
     let q1 = EmptyQueue :: RequestQueue Request
     forServer <- newMVar q1
     end <- newEmptyMVar
+    
     forM_ [0..9] $ \i -> 
         forkIO (initClient i forServer 10)
+    
     forM_ [1..3] $ \i -> 
         forkIO (initServer i forServer processedCounter end logger)
+    
     endSignal <- takeMVar end
     print endSignal
 

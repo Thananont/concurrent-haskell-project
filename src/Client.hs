@@ -15,15 +15,19 @@ initClient id forServer limit =
         else do
             queueLog <- takeMVar forServer
             responseSignal <- newEmptyMVar
+
             time <- getCurrentTime 
+            
             let clientRequestDetail = "ClientId " ++ (show id) ++ " pings the server at " ++ (show time)
             let request = Request {
                 requestDetail = clientRequestDetail,
                 responseSignal = responseSignal,
                 requestTime = time
             }
-            let temp = enqueue request queueLog
-            putMVar forServer (temp)
+            let requestQueue = enqueue request queueLog
+            
+            putMVar forServer (requestQueue)
+            
             response <- takeMVar responseSignal
             let (responseData, responseTime) = parseResponse response
             waitTime <- randomRIO (1000000 :: Int, 10000000 :: Int)

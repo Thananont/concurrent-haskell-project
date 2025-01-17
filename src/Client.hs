@@ -1,13 +1,18 @@
 module Client
     ( initClient
+    , parseResponse
     ) where
 
-import Queue (RequestQueue, enqueue)
-import Types (Request(..), Response(..))
+import Queue (enqueue)
+import Types (Request(..), Response(..), RequestQueue(..))
 import Control.Concurrent (MVar, newEmptyMVar, takeMVar, putMVar, threadDelay)
 import System.Random (randomRIO)
 import Data.Time.Clock (getCurrentTime)
 
+-- | This is a function initializes a client and send a ping requests to the specified queue. After sending the request,
+-- the client then wait for the response from the server. After receiving a response, the client waits a random 
+-- amount of time between one to ten second before repeating the process. This process is repeated based on the limit 
+-- input.
 initClient :: Int -> MVar (RequestQueue Request) -> Int -> IO ()
 initClient clientId forServer limit = 
     if limit == 0 
@@ -37,5 +42,6 @@ initClient clientId forServer limit =
             threadDelay waitTime
             initClient clientId forServer (limit - 1)
 
+-- | The function parses a response and returns the details of the response. 
 parseResponse :: Response -> String
 parseResponse response = responseData response        

@@ -1,9 +1,8 @@
 module Main (main) where
 
-import Client
-import Server
-import Queue (RequestQueue(..))
-import Types (Request(..))
+import Client (initClient)
+import Server (initServer)
+import Types (Request(..), RequestQueue(..))
 import Control.Concurrent
 import Control.Monad (forM_)
 import Data.IORef (newIORef)

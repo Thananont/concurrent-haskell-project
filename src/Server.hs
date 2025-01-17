@@ -6,7 +6,7 @@ import Queue (RequestQueue, dequeue)
 import Types (Request(..), Response(..))
 import Control.Concurrent (MVar, takeMVar, newEmptyMVar, putMVar, threadDelay)
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime)
-import Data.IORef (IORef, readIORef, writeIORef, atomicModifyIORef)
+import Data.IORef (IORef, atomicModifyIORef)
 import System.Log.FastLogger 
 
 initServer :: Int -> MVar (RequestQueue Request) -> IORef Int -> MVar String -> LoggerSet-> IO ()
@@ -24,6 +24,7 @@ initServer serverId forServer processedCounter end logger = do
     
     let response = Response {
         responseData = "The ping was received and it took the server " ++ show diff ++ " to respond.",
+        responseCode = 200,
         responseTime = currentTime
     }
     

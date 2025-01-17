@@ -14,5 +14,6 @@ data Request = Request {
 
 data Response = Response { 
     responseData :: String,
+    responseCode :: Int,
     responseTime :: UTCTime
 }
